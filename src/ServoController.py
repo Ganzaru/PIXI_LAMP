@@ -1,4 +1,6 @@
 from __future__ import division
+from scipy.interpolate import interp1d
+
 import time
 
 # Import the PCA9685 module.
@@ -24,9 +26,9 @@ class Servo:
 	# Class parameters
 	_sType=0
 	_maxAngle=90
-	_minAngle=-90
+	_minAngle=0
 	_reverse=false
-	_waitTime=250; #Time in us per 45º
+	_waitTime=250; #Time in us per 45 degrees
 	_Angle=0
 	def __init__(self, type=0, reverse=false):
 		self._sType=type
@@ -34,10 +36,13 @@ class Servo:
 
 	def pulseCalc(self, degrees):
 		Time=0
-		if ((degrees<_maxAngle) && (degrees>_minAngle)):
+		if ((degrees<this._maxAngle) && (degrees>this._minAngle)):
 			Time=(1/freq)*sin(degrees)
 		return Time
-
+	
+	def translate(self,value):
+		return interp1d([self._minAngle,self._maxAngle],[200,750])(value)
+	
 	# Helper function to make setting a servo pulse width simpler.
 	def set_servo_pulse(channel, pulse):
 		pulse_length = 1000000    # 1,000,000 us per second
@@ -54,13 +59,15 @@ class Servo:
 
 	print('Moving servo on channel 0, press Ctrl-C to quit...')
 
-	while True:
-		# Move servo on channel O between extremes.
-		pwm.set_pwm(15, 0,servo_min)
-		pwm.set_pwm(13,0,200)
-		time.sleep(1)
-		pwm.set_pwm(15, 0, servo_max)
-		pwm.set_pwm(13,0,750)
-		time.sleep(1)
-		
+s=Servo();
+s.__init__(0)
+while True:
+	# Move servo on channel O between extremes.
+	pwm.set_pwm(0, 0,s.translate(45))
+	
 	time.sleep(1)
+	pwm.set_pwm(0, 0, s.translate(90))
+	
+	time.sleep(1)
+		
+time.sleep(1)
